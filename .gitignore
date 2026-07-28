@@ -1,1 +1,6 @@
 .env
+*.tsx
+favicon.ico
+globals.css
+.gitignore.swp
+

@@ -2,7 +2,6 @@ services:
 
   POSTGRES:
     image: postgres:15-alpine
-      #container_name: POSTGRES
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -16,7 +15,6 @@ services:
   BACKEND:
     build: ./BackEND
     image: newbackend  
-      #container_name: django_backend
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
@@ -44,7 +42,6 @@ services:
   FRONTEND:
     build: ./FrontEND
     image: newfrontend
-      #container_name: nextjs_frontend
     restart: always
     depends_on:
       - BACKEND
@@ -65,7 +62,6 @@ services:
 
   NGINX:
     image: nginx:alpine
-      #container_name: nginx_proxy
     restart: always
     depends_on:
       - FRONTEND
@@ -83,4 +79,3 @@ volumes:
 networks:
   MyNetwork:
     driver: bridge
-

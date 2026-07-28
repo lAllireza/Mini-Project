@@ -1,11 +1,7 @@
-// app/page.js
-
-// این تابع به صورت SSR درون کانتینر داکر اجرا می‌شود
 async function getDbStatus() {
   try {
-    // استفاده از نام سرویس بک‌اند در شبکه داکر (Task 3.3)
     const res = await fetch('http://BACKEND:8000/api/health/db/', {
-      cache: 'no-store', // برای اینکه همیشه وضعیت لحظه‌ای دیتابیس را ببینیم
+      cache: 'no-store',
     });
     
     if (!res.ok) {
