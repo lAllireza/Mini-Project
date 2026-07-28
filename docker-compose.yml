@@ -4,8 +4,6 @@ services:
     image: postgres:15-alpine
       #container_name: POSTGRES
     restart: always
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -20,8 +18,6 @@ services:
     image: newbackend  
       #container_name: django_backend
     restart: always
-    ports:
-      - "8000:8000"
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -50,8 +46,6 @@ services:
     image: newfrontend
       #container_name: nextjs_frontend
     restart: always
-    ports:
-      - "3000:3000"
     depends_on:
       - BACKEND
     networks:
