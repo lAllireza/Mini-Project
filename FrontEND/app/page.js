@@ -4,7 +4,7 @@
 async function getDbStatus() {
   try {
     // استفاده از نام سرویس بک‌اند در شبکه داکر (Task 3.3)
-    const res = await fetch('http://BackEND:8000/api/health/db/', {
+    const res = await fetch('http://BACKEND:8000/api/health/db/', {
       cache: 'no-store', // برای اینکه همیشه وضعیت لحظه‌ای دیتابیس را ببینیم
     });
     

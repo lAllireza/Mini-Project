@@ -15,7 +15,7 @@ services:
     networks:
       - MyNetwork
 
-  BackEND:
+  BACKEND:
     build: ./BackEND
     image: newbackend  
       #container_name: django_backend
@@ -45,7 +45,7 @@ services:
         - action: rebuild
           path: ./BackEND/Dockerfile
 
-  FrontEND:
+  FRONTEND:
     build: ./FrontEND
     image: newfrontend
       #container_name: nextjs_frontend
@@ -53,7 +53,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - BackEND
+      - BACKEND
     networks:
       - MyNetwork    
     develop:
@@ -74,8 +74,8 @@ services:
       #container_name: nginx_proxy
     restart: always
     depends_on:
-      - FrontEND
-      - BackEND
+      - FRONTEND
+      - BACKEND
     volumes:
       - ./NGINX/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
