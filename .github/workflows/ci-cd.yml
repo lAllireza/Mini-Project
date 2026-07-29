@@ -120,7 +120,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/backend:latest
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=semver,pattern={{version}}
 
       - name: Build and push Backend Image
@@ -137,7 +137,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=semver,pattern={{version}}
 
       - name: Build and push Frontend Image
