@@ -118,7 +118,7 @@ jobs:
         id: backend_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/backend:1.0
+          images: ${{ secrets.DOCKER_USERNAME }}/backend:latest
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
@@ -135,7 +135,7 @@ jobs:
         id: frontend_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/frontend:1.0.0
+          images: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
