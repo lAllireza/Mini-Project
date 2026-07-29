@@ -11,11 +11,39 @@ jobs:
   # ۱. بررسی‌های بک‌اند (در پوشه BackEND)
   backend-checks:
     runs-on: ubuntu-latest
+
+    # دیتابیس تست برای manage.py check / manage.py test
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # این اسم‌ها رایج‌ترین حالت هستن. اگه settings.py شما اسم دیگه‌ای برای
+    # این متغیرها استفاده می‌کنه (مثلاً POSTGRES_HOST یا DATABASE_URL)،
+    # فقط اسم کلید (سمت چپ) رو عوض کنید؛ مقدارها (سمت راست) نیازی به تغییر ندارن
+    # چون با سرویس postgres بالا هماهنگ هستن.
+    env:
+      DB_NAME: test_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: 5432
+
     # این دستور باعث می‌شود تمام stepها به صورت پیش‌فرض داخل پوشه BackEND اجرا شوند
     defaults:
       run:
         working-directory: ./BackEND
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,13 +51,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' 
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flake8
-          pip install -r requirements.txt 
+          pip install -r requirements.txt
 
       - name: Lint with flake8
         run: flake8 . --max-line-length=100
@@ -47,7 +75,7 @@ jobs:
     defaults:
       run:
         working-directory: ./FrontEND
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,9 +97,9 @@ jobs:
   # ۳. ساخت و پوش کردن کانتینرهای داکر
   docker-build-push:
     needs: [backend-checks, frontend-checks]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/new' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,13 +113,32 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # روی تگ (v1.2.3) هم "1.2.3" و هم "latest" ساخته میشه، روی push ساده فقط "latest"
+      - name: Extract backend tags
+        id: backend_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/your-backend-repo
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+
       - name: Build and push Backend Image
         uses: docker/build-push-action@v5
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
           context: ./BackEND
           push: true
-          tags: your-dockerhub-username/your-backend-repo:latest
+          tags: ${{ steps.backend_meta.outputs.tags }}
+
+      - name: Extract frontend tags
+        id: frontend_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/your-frontend-repo
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
 
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v5
@@ -99,4 +146,4 @@ jobs:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
           context: ./FrontEND
           push: true
-          tags: your-dockerhub-username/your-frontend-repo:latest
+          tags: ${{ steps.frontend_meta.outputs.tags }}
