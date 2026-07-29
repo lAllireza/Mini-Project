@@ -18,4 +18,3 @@ def test_db_connection(request):
             "status": "error",
             "message": f"Database connection failed: {str(e)}"
         }, status=500)
-    
