@@ -1,4 +1,4 @@
-from django.shortcuts import render
+#from django.shortcuts import render
 from django.http import JsonResponse
 from django.db import connections
 from django.db.utils import OperationalError
@@ -7,7 +7,6 @@ def test_db_connection(request):
     db_conn = connections['default']
     try:
         # تلاش برای اتصال واقعی به دیتابیس
-        c = db_conn.cursor()
         return JsonResponse({
             "status": "success",
             "message": "Connected to PostgreSQL successfully!",
@@ -18,4 +17,3 @@ def test_db_connection(request):
             "status": "error",
             "message": f"Database connection failed: {str(e)}"
         }, status=500)
-# Create your views here.
