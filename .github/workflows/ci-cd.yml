@@ -49,9 +49,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -130,7 +130,7 @@ jobs:
       # استخراج تگ‌های بک‌اند (برای داکر هاب و گیت‌هاب به صورت همزمان)
       - name: Extract backend tags
         id: backend_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ secrets.DOCKER_USERNAME }}/backend
