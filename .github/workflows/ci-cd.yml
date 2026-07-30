@@ -142,7 +142,7 @@ jobs:
             type=semver,pattern={{major}}
 
       - name: Build and push Backend Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
           context: ./BackEND
@@ -165,7 +165,7 @@ jobs:
             type=semver,pattern={{major}}
 
       - name: Build and push Frontend Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
           context: ./FrontEND
@@ -175,7 +175,7 @@ jobs:
 
   # ۴. ساخت خودکار GitHub Release روی تگ‌ها
   create-release:
-    needs: [frontend-checks, backend-checks]
+    needs: [backend-checks, frontend-checks]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -186,7 +186,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
