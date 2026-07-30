@@ -19,7 +19,7 @@ services:
 
   BACKEND:
     build: ./BackEND
-    image: newbackend  
+    image: backend:${TAG:-latest}
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
@@ -52,7 +52,7 @@ services:
 
   FRONTEND:
     build: ./FrontEND
-    image: newfrontend
+    image: frontend:${TAG:-latest}
     restart: always
     depends_on:
       BACKEND:
@@ -78,7 +78,7 @@ services:
       retries: 3
 
   NGINX:
-    image: nginx:alpine
+    image: nginx:1.31-alpine
     restart: always
     depends_on:
       FRONTEND:
@@ -92,7 +92,7 @@ services:
     networks:
       - MyNetwork
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 3
