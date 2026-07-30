@@ -100,28 +100,46 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/new' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
 
+    # دسترسی لازم برای نوشتن ایمیج‌ها در بخش Packages گیت‌هاب
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ورود به Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # ورود به GitHub Container Registry (ghcr.io)
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # این توکن به صورت خودکار توسط گیت‌هاب ساخته می‌شود
 
-      # روی تگ (v1.2.3) هم "1.2.3" و هم "latest" ساخته میشه، روی push ساده فقط "latest"
+      # استخراج تگ‌های بک‌اند (برای داکر هاب و گیت‌هاب به صورت همزمان)
       - name: Extract backend tags
         id: backend_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/backend
+          images: |
+            ${{ secrets.DOCKER_USERNAME }}/backend
+            ghcr.io/${{ github.repository_owner }}/backend
           tags: |
             type=raw,value=latest
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Build and push Backend Image
         uses: docker/build-push-action@v5
@@ -130,15 +148,21 @@ jobs:
           context: ./BackEND
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
+          labels: ${{ steps.backend_meta.outputs.labels }}
 
+      # استخراج تگ‌های فرانت‌اند (برای داکر هاب و گیت‌هاب به صورت همزمان)
       - name: Extract frontend tags
         id: frontend_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/frontend
+          images: |
+            ${{ secrets.DOCKER_USERNAME }}/frontend
+            ghcr.io/${{ github.repository_owner }}/frontend
           tags: |
             type=raw,value=latest
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v5
@@ -147,3 +171,4 @@ jobs:
           context: ./FrontEND
           push: true
           tags: ${{ steps.frontend_meta.outputs.tags }}
+          labels: ${{ steps.frontend_meta.outputs.labels }}
