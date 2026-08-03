@@ -19,7 +19,7 @@ services:
 
   BACKEND:
     build: ./BackEND
-    image: backend:${TAG:-latest}
+    image: lallireza/backend:${TAG:-latest}
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
@@ -52,7 +52,7 @@ services:
 
   FRONTEND:
     build: ./FrontEND
-    image: frontend:${TAG:-latest}
+    image: lallireza/frontend:${TAG:-latest}
     restart: always
     depends_on:
       BACKEND:
