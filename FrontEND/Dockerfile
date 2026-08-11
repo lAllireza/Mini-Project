@@ -1,11 +1,12 @@
 FROM node:26-alpine
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN mkdir /app && chown appuser:appgroup /app
 WORKDIR /app
-#RUN addgroup -S appgroup && adduser -S appuser -G appgroup  
-COPY package*.json ./
+COPY --chown=appuser:appgroup package*.json ./
+USER appuser
 RUN npm install
-COPY . .
+COPY --chown=appuser:appgroup . .
 RUN npm run build
 #RUN chown -R appuser:appgroup /app
-#USER appuser
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev"]   

@@ -30,6 +30,9 @@ services:
     depends_on:
       POSTGRES:
         condition: service_healthy
+    volumes:
+      - ./NGINX/nginx.crt:/nginx.crt:ro
+      - ./NGINX/nginx.key:/nginx.key:ro
     networks:
       - MyNetwork
     develop:
@@ -45,54 +48,58 @@ services:
         - action: rebuild
           path: ./BackEND/Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/db/')\""]
+      test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx = ssl._create_unverified_context(); urllib.request.urlopen('https://127.0.0.1:8000/api/health/db/', context=ctx, timeout=5)\""]
       interval: 15s
       timeout: 10s
       retries: 3
 
-  FRONTEND:
-    build: ./FrontEND
-    image: lallireza/frontend:${TAG:-latest}
-    restart: always
-    depends_on:
-      BACKEND:
-        condition: service_healthy
-    networks:
-      - MyNetwork    
-    develop:
-      watch:
-        - action: sync
-          path: ./FrontEND
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
-        - action: rebuild
-          path: ./FrontEND/package.json
-        - action: rebuild
-          path: ./FrontEND/Dockerfile
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000 || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 3
+  # FRONTEND:
+  #   build: ./FrontEND
+  #   image: lallireza/frontend:${TAG:-latest}
+  #   restart: always
+  #   depends_on:
+  #     BACKEND:
+  #       condition: service_healthy
+  #   networks:
+  #     - MyNetwork    
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./FrontEND
+  #         target: /app
+  #         ignore:
+  #           - node_modules/
+  #           - .next/
+  #       - action: rebuild
+  #         path: ./FrontEND/package.json
+  #       - action: rebuild
+  #         path: ./FrontEND/Dockerfile
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000 || exit 1"]
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 3
 
   NGINX:
     image: nginx:1.31-alpine
     restart: always
     depends_on:
-      FRONTEND:
-        condition: service_healthy
+      # FRONTEND:
+      #   condition: service_healthy
       BACKEND:
         condition: service_healthy
     volumes:
       - ./NGINX/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./NGINX/nginx.crt:/etc/nginx/certs/nginx.crt:ro
+      - ./NGINX/nginx.key:/etc/nginx/certs/nginx.key:ro
+      - ./FrontEND/out:/usr/share/nginx/html:ro
     ports:
       - "8080:80"
+      - "443:443"
     networks:
       - MyNetwork
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1 || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null --no-check-certificate https://127.0.0.1 || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 3
