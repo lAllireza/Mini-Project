@@ -7,6 +7,5 @@ USER appuser
 RUN npm install
 COPY --chown=appuser:appgroup . .
 RUN npm run build
-#RUN chown -R appuser:appgroup /app
 EXPOSE 3000
-CMD ["npm", "run", "dev"]   
+CMD ["npm", "run", "build"]
