@@ -28,7 +28,7 @@ Open the `.env` file and update the values according to your environment.
 Example:
 
 ```env
-DB_HOST=POSTGRES
+DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=postgres
 DB_USER=postgres
