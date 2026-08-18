@@ -9,6 +9,18 @@ services:
     image: lallireza/backend:${TAG:-latest}-dev
     ports:
       - "8000:8000"
+    develop:
+      watch:
+        - action: sync
+          path: ./BackEND
+          target: /app
+          ignore:
+            - __pycache__/
+            - "*.sqlite3"
+        - action: rebuild
+          path: ./BackEND/requirements.txt
+        - action: rebuild
+          path: ./BackEND/Dockerfile 
 
   frontend:
     build: ./FrontEND

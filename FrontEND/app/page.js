@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [data, setData] = useState({ status: "loading", message: "در حال بررسی وضعیت..." });
+  const [data, setData] = useState({ status: "loading", message: "در حال #@#ASDASFS@# وضعیت..." });
 
   useEffect(() => {
     async function getDbStatus() {
