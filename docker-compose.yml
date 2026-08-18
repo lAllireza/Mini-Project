@@ -1,5 +1,4 @@
 services:
-
   postgres:
     image: postgres:15-alpine
     restart: always
@@ -10,7 +9,7 @@ services:
     volumes:
       - POSTGRES-DATA:/var/lib/postgresql/data
     networks:
-      - MyNetwork
+      - backend-database-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
@@ -18,7 +17,6 @@ services:
       retries: 5
 
   backend:
-    build: ./BackEND
     image: lallireza/backend:${TAG:-latest}
     restart: always
     environment:
@@ -34,70 +32,28 @@ services:
       - ./NGINX/nginx.crt:/nginx.crt:ro
       - ./NGINX/nginx.key:/nginx.key:ro
     networks:
-      - MyNetwork
-    develop:
-      watch:
-        - action: sync
-          path: ./BackEND
-          target: /app
-          ignore:
-            - __pycache__/
-            - "*.sqlite3"
-        - action: rebuild
-          path: ./BackEND/requirements.txt
-        - action: rebuild
-          path: ./BackEND/Dockerfile
+      - frontend-backend-network
+      - backend-database-network
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import ssl, urllib.request; ctx = ssl._create_unverified_context(); urllib.request.urlopen('https://127.0.0.1:8000/api/health/db/', context=ctx, timeout=5)\""]
       interval: 15s
       timeout: 10s
       retries: 3
 
-  # frontend:
-  #   build: ./FrontEND
-  #   image: lallireza/frontend:${TAG:-latest}
-  #   restart: always
-  #   depends_on:
-  #     backend:
-  #       condition: service_healthy
-  #   networks:
-  #     - MyNetwork    
-  #   develop:
-  #     watch:
-  #       - action: sync
-  #         path: ./FrontEND
-  #         target: /app
-  #         ignore:
-  #           - node_modules/
-  #           - .next/
-  #       - action: rebuild
-  #         path: ./FrontEND/package.json
-  #       - action: rebuild
-  #         path: ./FrontEND/Dockerfile
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000 || exit 1"]
-  #     interval: 15s
-  #     timeout: 10s
-  #     retries: 3
-
   nginx:
     image: nginx:1.31-alpine
     restart: always
     depends_on:
-      # frontend:
-      #   condition: service_healthy
       backend:
         condition: service_healthy
     volumes:
-      - ./NGINX/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./NGINX/nginx.crt:/etc/nginx/certs/nginx.crt:ro
       - ./NGINX/nginx.key:/etc/nginx/certs/nginx.key:ro
-      - ./FrontEND/out:/usr/share/nginx/html:ro
     ports:
       - "8080:80"
       - "443:443"
     networks:
-      - MyNetwork
+      - frontend-backend-network
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null --no-check-certificate https://127.0.0.1 || exit 1"]
       interval: 15s
@@ -108,5 +64,7 @@ volumes:
   POSTGRES-DATA:
 
 networks:
-  MyNetwork:
+  frontend-backend-network:
+    driver: bridge
+  backend-database-network:
     driver: bridge

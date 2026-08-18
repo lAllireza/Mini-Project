@@ -8,4 +8,4 @@ RUN npm install
 COPY --chown=appuser:appgroup . .
 RUN npm run build
 EXPOSE 3000
-CMD ["npm", "run", "build"]
+CMD ["npm", "run", "dev"]

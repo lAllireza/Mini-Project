@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./BackEND
+    image: lallireza/backend:${TAG:-latest}-dev
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./FrontEND
+    image: lallireza/frontend:${TAG:-latest}-dev
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./NGINX/nginx.crt:/certs/nginx.crt:ro
+      - ./NGINX/nginx.key:/certs/nginx.key:ro
+    networks:
+      - frontend-backend-network
+    # command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./FrontEND
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+        - action: rebuild
+          path: ./FrontEND/package.json
+        - action: rebuild
+          path: ./FrontEND/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null --no-check-certificate https://127.0.0.1:3000 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:1.31-alpine
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./NGINX/default.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./NGINX/nginx.crt:/etc/nginx/certs/nginx.crt:ro
+      - ./NGINX/nginx.key:/etc/nginx/certs/nginx.key:ro

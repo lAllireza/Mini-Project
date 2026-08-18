@@ -106,6 +106,11 @@ self.__SERVER_FILES_MANIFEST={
       }
     },
     "outputFileTracingRoot": "/home/user/Project/FrontEND",
+    "allowedDevOrigins": [
+      "192.168.230.134",
+      "localhost",
+      "127.0.0.1"
+    ],
     "cacheComponents": false,
     "cacheLife": {
       "default": {
