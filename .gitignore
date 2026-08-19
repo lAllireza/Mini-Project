@@ -1,2 +1,4 @@
 .env
-./FrontEND/
+/FrontEND/*
+!/FrontEND/out
+!/FrontEND/out/**
