@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 async function getDbStatus() {
   try {
     const res = await fetch('http://BACKEND:8000/api/health/db/', {
@@ -6,29 +7,49 @@ async function getDbStatus() {
     
     if (!res.ok) {
       throw new Error('Failed to fetch data from backend');
-    }
-    
-    return await res.json();
-  } catch (error) {
-    return { status: 'error', message: error.message };
-  }
-}
+=======
+"use client";
 
-export default async function HomePage() {
-  const data = await getDbStatus();
+import { useEffect, useState } from "react";
+
+export default function HomePage() {
+  const [data, setData] = useState({ status: "loading", message: "در حال #@#ASDASFS@# وضعیت..." });
+
+  useEffect(() => {
+    async function getDbStatus() {
+      try {
+        const res = await fetch("/api/health/db/", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch data from backend");
+        }
+
+        setData(await res.json());
+      } catch (error) {
+        setData({ status: "error", message: error.message });
+      }
+>>>>>>> new
+    }
+
+    getDbStatus();
+  }, []);
+
+  const isSuccess = data.status === "success";
 
   return (
-    <main style={{ padding: '50px', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto' }}>
+    <main style={{ padding: "50px", fontFamily: "sans-serif", maxWidth: "600px", margin: "0 auto" }}>
       <h1>🚀 Next.js + Django + PostgreSQL</h1>
       <p>این صفحه از درون کانتینر فرانت‌اند، API جنگو را صدا زده است.</p>
 
       <div style={{
-        padding: '20px',
-        borderRadius: '8px',
-        marginTop: '20px',
-        backgroundColor: data.status === 'success' ? '#d4edda' : '#f8d7da',
-        color: data.status === 'success' ? '#155724' : '#721c24',
-        border: `1px solid ${data.status === 'success' ? '#c3e6cb' : '#f5c6cb'}`
+        padding: "20px",
+        borderRadius: "8px",
+        marginTop: "20px",
+        backgroundColor: isSuccess ? "#d4edda" : data.status === "loading" ? "#e2e3e5" : "#f8d7da",
+        color: isSuccess ? "#155724" : data.status === "loading" ? "#383d41" : "#721c24",
+        border: `1px solid ${isSuccess ? "#c3e6cb" : data.status === "loading" ? "#d6d8db" : "#f5c6cb"}`
       }}>
         <h3>وضعیت ارتباط با بک‌اند و دیتابیس:</h3>
         <p><strong>وضعیت:</strong> {data.status}</p>
