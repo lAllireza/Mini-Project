@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Mini Project
 =======
 ## 🚀 Getting Started
