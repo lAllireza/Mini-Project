@@ -1,19 +1,9 @@
-<<<<<<< HEAD
-async function getDbStatus() {
-  try {
-    const res = await fetch('http://BACKEND:8000/api/health/db/', {
-      cache: 'no-store',
-    });
-    
-    if (!res.ok) {
-      throw new Error('Failed to fetch data from backend');
-=======
 "use client";
 
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [data, setData] = useState({ status: "loading", message: "در حال #@#ASDASFS@# وضعیت..." });
+  const [data, setData] = useState({ status: "loading", message: "در حال وضعیت..." });
 
   useEffect(() => {
     async function getDbStatus() {
@@ -30,7 +20,6 @@ export default function HomePage() {
       } catch (error) {
         setData({ status: "error", message: error.message });
       }
->>>>>>> new
     }
 
     getDbStatus();

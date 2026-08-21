@@ -18,11 +18,7 @@ services:
 
   backend:
     build: ./BackEND
-<<<<<<< HEAD
-    image: newbackend  
-=======
     image: lallireza/backend:${TAG:-latest}-dev
->>>>>>> new
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
@@ -31,54 +27,8 @@ services:
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
     depends_on:
-<<<<<<< HEAD
-      - POSTGRES
-    networks:
-      - MyNetwork
-    develop:
-      watch:
-        - action: sync
-          path: ./BackEND
-          target: /app
-          ignore:
-            - __pycache__/
-            - "*.sqlite3"
-        - action: rebuild
-          path: ./BackEND/requirements.txt
-        - action: rebuild
-          path: ./BackEND/Dockerfile
-
-  FRONTEND:
-    build: ./FrontEND
-    image: newfrontend
-    restart: always
-    depends_on:
-      - BACKEND
-    networks:
-      - MyNetwork    
-    develop:
-      watch:
-        - action: sync
-          path: ./FrontEND
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
-        - action: rebuild
-          path: ./FrontEND/package.json
-        - action: rebuild
-          path: ./FrontEND/Dockerfile
-
-  NGINX:
-    image: nginx:alpine
-    restart: always
-    depends_on:
-      - FRONTEND
-      - BACKEND
-=======
       postgres:
         condition: service_healthy
->>>>>>> new
     volumes:
       - ./NGINX/nginx.crt:/nginx.crt:ro
       - ./NGINX/nginx.key:/nginx.key:ro
@@ -92,7 +42,9 @@ services:
       retries: 3
 
   nginx:
-    image: nginx:1.31-alpine
+    build:
+      context: ./FrontEND
+      dockerfile: Dockerfile
     restart: always
     depends_on:
       backend:
@@ -115,11 +67,7 @@ volumes:
   POSTGRES-DATA:
 
 networks:
-<<<<<<< HEAD
-  MyNetwork:
-=======
   frontend-backend-network:
     driver: bridge
   backend-database-network:
->>>>>>> new
     driver: bridge

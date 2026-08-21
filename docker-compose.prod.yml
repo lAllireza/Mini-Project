@@ -1,5 +1,6 @@
 services:
-  nginx:
+ nginx:
+    build:
+      target: prod-stage
     volumes:
       - ./NGINX/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./FrontEND/out:/usr/share/nginx/html:ro
