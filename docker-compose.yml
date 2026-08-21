@@ -42,7 +42,9 @@ services:
       retries: 3
 
   nginx:
-    image: nginx:1.31-alpine
+    build:
+      context: ./FrontEND
+      dockerfile: Dockerfile
     restart: always
     depends_on:
       backend:

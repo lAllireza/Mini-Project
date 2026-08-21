@@ -10,7 +10,7 @@ def test_db_connection(request):
         # تلاش برای اتصال واقعی به دیتابیس
         return JsonResponse({
             "status": "success",
-            "message": "Connected to PostgreSQL successfully!@@@@@@@@@@@@###########",
+            "message": "Connected to PostgreSQL successfully!",
             "database": db_conn.settings_dict['NAME']
         }, status=200)
     except OperationalError as e:
