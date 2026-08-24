@@ -16,5 +16,5 @@ def test_db_connection(request):
     except OperationalError as e:
         return JsonResponse({
             "status": "error",
-            "message": f"Database connection failed:@@@@@@@@@@############# {str(e)}"
+            "message": f"Database connection failed {str(e)}"
         }, status=500)

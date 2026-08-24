@@ -34,8 +34,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./NGINX/nginx.crt:/certs/nginx.crt:ro
-      - ./NGINX/nginx.key:/certs/nginx.key:ro
+      - ./NGINX/certs:/certs:ro
     networks:
       - frontend-backend-network
     command: npm run dev

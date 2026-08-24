@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appgroup . .
 USER appuser
 EXPOSE 8000
-CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8000", "--certificate", "/nginx.crt", "--key", "/nginx.key"]   
+CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8000", "--certificate", "/certs/nginx.crt", "--key", "/certs/nginx.key"]
