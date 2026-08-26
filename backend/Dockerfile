@@ -1,9 +1,9 @@
 FROM python:3.11-slim
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-RUN mkdir /app && chown appuser:appgroup /app
+RUN mkdir -p /app/backend && chown -R appuser:appgroup /app
 
-WORKDIR /app
+WORKDIR /app/backend
 
 COPY --chown=appuser:appgroup requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

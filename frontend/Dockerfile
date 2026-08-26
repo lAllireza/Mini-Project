@@ -1,15 +1,15 @@
 FROM node:26-alpine AS dev-stage
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-RUN mkdir /app && chown appuser:appgroup /app
+RUN mkdir -p /app/frontend && chown -R appuser:appgroup /app
 
-WORKDIR /app
+WORKDIR /app/frontend
 
 COPY --chown=appuser:appgroup package*.json ./
 
 USER appuser
 
-RUN npm install
+RUN npm install --registry=https://mirror2.chabokan.net/npm/
 
 COPY --chown=appuser:appgroup . .
 
