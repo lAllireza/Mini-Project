@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - POSTGRES-DATA:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - backend-database-network
     healthcheck:
@@ -17,7 +17,7 @@ services:
       retries: 5
 
   backend:
-    build: ./BackEND
+    build: ./backend
     image: lallireza/backend:${TAG:-latest}-dev
     restart: always
     environment:
@@ -30,8 +30,8 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./NGINX/nginx.crt:/nginx.crt:ro
-      - ./NGINX/nginx.key:/nginx.key:ro
+      - ./nginx/nginx.crt:/nginx.crt:ro
+      - ./nginx/nginx.key:/nginx.key:ro
     networks:
       - frontend-backend-network
       - backend-database-network
@@ -43,15 +43,15 @@ services:
 
   nginx:
     build:
-      context: ./FrontEND
+      context: ./frontend
       dockerfile: Dockerfile
     restart: always
     depends_on:
       backend:
         condition: service_healthy
     volumes:
-      - ./NGINX/nginx.crt:/etc/nginx/certs/nginx.crt:ro
-      - ./NGINX/nginx.key:/etc/nginx/certs/nginx.key:ro
+      - ./nginx/nginx.crt:/etc/nginx/certs/nginx.crt:ro
+      - ./nginx/nginx.key:/etc/nginx/certs/nginx.key:ro
     ports:
       - "8080:80"
       - "443:443"
@@ -64,7 +64,7 @@ services:
       retries: 3
 
 volumes:
-  POSTGRES-DATA:
+  postgres-data:
 
 networks:
   frontend-backend-network:

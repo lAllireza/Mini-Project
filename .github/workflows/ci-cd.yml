@@ -8,7 +8,7 @@ on:
     branches: [ "main", "new" ]
 
 jobs:
-  # ۱. بررسی‌های بک‌اند (در پوشه BackEND)
+  # ۱. بررسی‌های بک‌اند (در پوشه backend)
   backend-checks:
     runs-on: ubuntu-latest
 
@@ -35,10 +35,10 @@ jobs:
       DB_HOST: localhost
       DB_PORT: 5432
 
-    # این دستور باعث می‌شود تمام stepها به صورت پیش‌فرض داخل پوشه BackEND اجرا شوند
+    # این دستور باعث می‌شود تمام stepها به صورت پیش‌فرض داخل پوشه backend اجرا شوند
     defaults:
       run:
-        working-directory: ./BackEND
+        working-directory: ./backend
 
     steps:
       - name: Checkout code
@@ -64,13 +64,13 @@ jobs:
       - name: Run Django Tests
         run: python manage.py test
 
-  # ۲. بررسی‌های فرانت‌اند (در پوشه FrontEND)
+  # ۲. بررسی‌های فرانت‌اند (در پوشه frontend)
   frontend-checks:
     runs-on: ubuntu-latest
     # تمام دستورات فرانت‌اند به صورت پیش‌فرض در این پوشه اجرا خواهند شد
     defaults:
       run:
-        working-directory: ./FrontEND
+        working-directory: ./frontend
 
     steps:
       - name: Checkout code
@@ -141,7 +141,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
-          context: ./BackEND
+          context: ./backend
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
           labels: ${{ steps.backend_meta.outputs.labels }}
@@ -164,7 +164,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
-          context: ./FrontEND
+          context: ./frontend
           push: true
           tags: ${{ steps.frontend_meta.outputs.tags }}
           labels: ${{ steps.frontend_meta.outputs.labels }}
