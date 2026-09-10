@@ -142,6 +142,8 @@ jobs:
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
           context: ./BackEND
+          file: ./BackEND/Dockerfile
+          target: prod-stage
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
           labels: ${{ steps.backend_meta.outputs.labels }}
@@ -149,7 +151,7 @@ jobs:
       # استخراج تگ‌های فرانت‌اند (برای داکر هاب و گیت‌هاب به صورت همزمان)
       - name: Extract frontend tags
         id: frontend_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ secrets.DOCKER_USERNAME }}/frontend
@@ -165,6 +167,8 @@ jobs:
         with:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
           context: ./FrontEND
+          file: ./FrontEND/Dockerfile
+          target: prod-stage
           push: true
           tags: ${{ steps.frontend_meta.outputs.tags }}
           labels: ${{ steps.frontend_meta.outputs.labels }}

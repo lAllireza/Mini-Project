@@ -20,12 +20,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fgc_14rg)31pwx!lo=tc0)jl#hb*l+h$d46z1jq8=t$mptiqi8'
+# در production باید از طریق متغیر محیطی DJANGO_SECRET_KEY ست شود.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-fgc_14rg)31pwx!lo=tc0)jl#hb*l+h$d46z1jq8=t$mptiqi8',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# پیش‌فرض False است؛ فقط برای توسعه‌ی محلی با DJANGO_DEBUG=True فعالش کن.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+# در production باید دامنه‌ی واقعی از طریق DJANGO_ALLOWED_HOSTS ست شود
+# (مثلاً: DJANGO_ALLOWED_HOSTS=example.com,www.example.com)
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -37,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'rest_framework',
     'MyApp',
     'sslserver',
 ]
@@ -127,3 +136,45 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Django REST Framework
+# احراز هویت مبتنی بر Session (کوکی)؛ چون nginx فرانت و بک‌اند را روی یک
+# دامنه سرو می‌کند، کوکی به‌صورت first-party کار می‌کند و نیازی به توکن نیست.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# CORS
+# اگر فرانت‌اند همیشه از پشت همین nginx (همان دامنه/پورت) صدا زده می‌شود،
+# اصلاً به CORS نیازی نیست. این تنظیمات فقط برای حالتی است که در توسعه
+# مستقیماً از Next.js dev server (مثلاً localhost:3000) به Django (مثلاً
+# localhost:8000) درخواست بزنی، بدون عبور از nginx.
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True  # چون از session/cookie استفاده می‌کنیم
+
+# Session / CSRF
+# دامنه‌ی واقعی که از پشت nginx سرو می‌شود را جایگزین مقادیر پایین کن
+# (یا از طریق متغیر محیطی CSRF_TRUSTED_ORIGINS بده).
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',')
+    if origin.strip()
+]
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # جاوااسکریپت فرانت باید بتواند این کوکی را بخواند
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # یک هفته، در صورت نیاز تغییر بده
+
+# در production حتماً این دو را True کن (روی HTTPS)
+SESSION_COOKIE_SECURE = os.environ.get('DJANGO_HTTPS', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('DJANGO_HTTPS', 'False') == 'True'

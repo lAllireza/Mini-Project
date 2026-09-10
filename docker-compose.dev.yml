@@ -5,7 +5,9 @@ services:
       - "5432:5432"
 
   backend:
-    build: ./BackEND
+    build:
+      context: ./BackEND
+      target: dev-stage
     image: lallireza/backend:${TAG:-latest}-dev
     ports:
       - "8000:8000"
