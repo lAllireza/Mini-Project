@@ -32,7 +32,7 @@ async function apiFetch(path, options = {}) {
   let body = null;
   try {
     body = await res.json();
-  } catch (err) {
+  } catch {
     // ممکن است بدنه‌ای نداشته باشد (مثل 204)
   }
 
