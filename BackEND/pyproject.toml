@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mycore-backend"
+version = "1.0.0"
+description = "Backend application — production build (obfuscated)"
+requires-python = ">=3.11"
+# وابستگی‌های سوم‌شخص (Django, DRF, gunicorn و ...) جدا از طریق requirements.txt
+# نصب می‌شوند؛ این wheel فقط کد خود اپلیکیشن (MyApp/MyCore) را بسته‌بندی می‌کند.
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
