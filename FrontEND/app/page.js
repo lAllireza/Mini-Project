@@ -7,9 +7,7 @@ export default function HomePage() {
   const [data, setData] = useState({ status: "loading", message: "در حال بررسی اتصال..." });
   const [checking, setChecking] = useState(false);
 
-  const getDbStatus = useCallback(async () => {
-    setChecking(true);
-    setData((prev) => ({ ...prev, status: "loading", message: "در حال بررسی اتصال..." }));
+  const fetchDbStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/health/db/", { cache: "no-store" });
       const body = await res.json();
@@ -32,8 +30,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    getDbStatus();
-  }, [getDbStatus]);
+    fetchDbStatus();
+  }, [fetchDbStatus]);
+
+  const handleRecheck = () => {
+    setChecking(true);
+    setData({ status: "loading", message: "در حال بررسی اتصال..." });
+    fetchDbStatus();
+  };
 
   const isSuccess = data.status === "success";
   const isLoading = data.status === "loading";
@@ -132,7 +136,7 @@ export default function HomePage() {
         </div>
 
         <button
-          onClick={getDbStatus}
+          onClick={handleRecheck}
           disabled={checking}
           style={{
             marginTop: "20px",
