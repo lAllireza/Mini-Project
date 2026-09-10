@@ -3,6 +3,7 @@ psycopg2-binary>=2.9
 django-cors-headers>=4.0
 django-sslserver>=0.22
 djangorestframework>=3.17
+gunicorn
 
 asgiref>=3.12
 packaging>=26.3

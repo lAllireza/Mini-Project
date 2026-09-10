@@ -59,28 +59,27 @@ FROM ${DOCKER_IMAGE_REGISTRY}/library/python:${PYTHON_VERSION} AS prod-stage
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq5 \
     && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-
+    && addgroup --system appgroup && adduser --system --ingroup appgroup --home /home/appuser appuser
 WORKDIR /app
 
 # وابستگی‌های سوم‌شخص (Django, DRF, gunicorn و ...)
-COPY --from=builder /root/.local /home/appuser/.local
+COPY --chown=appuser:appgroup --from=builder /root/.local /home/appuser/.local
 
 # فقط فایل wheel مبهم‌شده — نه یک خط سورس خام
-COPY --from=obfuscator /build/dist/*.whl /tmp/wheels/
-RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
-    && rm -rf /tmp/wheels
+COPY --chown=appuser:appgroup --from=obfuscator /build/dist/*.whl /tmp/wheels/
 
 # manage.py صرفاً یک اسکریپت CLI کوچک بدون منطق حساس است؛ جدا کپی می‌شود
 COPY --chown=appuser:appgroup manage.py .
-
+COPY --chown=appuser:appgroup --from=obfuscator /build/obfuscated/pyarmor_runtime_000000 /app/pyarmor_runtime_000000/
 RUN chown -R appuser:appgroup /app
 
 USER appuser
-ENV PATH=/home/appuser/.local/bin:$PATH \
+ENV PYTHONUSERBASE=/home/appuser/.local \
+    PATH=/home/appuser/.local/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
-
+RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
+    && rm -rf /app/wheels
 EXPOSE 8000
 
 CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "30"]

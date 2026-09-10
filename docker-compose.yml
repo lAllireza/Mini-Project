@@ -38,7 +38,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "python -c \"import ssl, json, urllib.request; ctx = ssl._create_unverified_context(); resp = urllib.request.urlopen('https://127.0.0.1:8000/api/health/db/', context=ctx, timeout=5); data = json.loads(resp.read()); exit(0 if data.get('status') == 'success' else 1)\""
+          "python -c \"import json, urllib.request; resp = urllib.request.urlopen('http://127.0.0.1:8000/api/health/db/', timeout=5); data = json.loads(resp.read()); exit(0 if data.get('status') == 'success' else 1)\""
         ]
       interval: 15s
       timeout: 10s
@@ -49,6 +49,7 @@ services:
     build:
       context: ./FrontEND
       dockerfile: Dockerfile
+    image: lallireza/frontend:${TAG:-latest}-dev
     restart: always
     depends_on:
       backend:
