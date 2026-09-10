@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function HomePage() {
   const [data, setData] = useState({ status: "loading", message: "در حال بررسی اتصال..." });
   const [checking, setChecking] = useState(false);
 
-  const fetchDbStatus = useCallback(async () => {
+  // عملیات بررسی مجدد با کلیک روی دکمه
+  const handleRecheck = async () => {
+    setChecking(true);
+    setData({ status: "loading", message: "در حال بررسی اتصال..." });
     try {
       const res = await fetch("/api/health/db/", { cache: "no-store" });
       const body = await res.json();
@@ -27,17 +30,41 @@ export default function HomePage() {
     } finally {
       setChecking(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchDbStatus();
-  }, [fetchDbStatus]);
-
-  const handleRecheck = () => {
-    setChecking(true);
-    setData({ status: "loading", message: "در حال بررسی اتصال..." });
-    fetchDbStatus();
   };
+
+  // لود اولیه در زمان رندر شدن کامپوننت
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialStatus() {
+      try {
+        const res = await fetch("/api/health/db/", { cache: "no-store" });
+        const body = await res.json();
+
+        if (!isMounted) return;
+
+        if (!res.ok) {
+          setData({
+            status: "error",
+            message: body.message || "خطا در دریافت اطلاعات از سرور",
+            detail: body.detail,
+          });
+          return;
+        }
+
+        setData(body);
+      } catch (error) {
+        if (!isMounted) return;
+        setData({ status: "error", message: "امکان ارتباط با بک‌اند وجود ندارد", detail: error.message });
+      }
+    }
+
+    loadInitialStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const isSuccess = data.status === "success";
   const isLoading = data.status === "loading";
