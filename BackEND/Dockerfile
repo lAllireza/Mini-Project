@@ -15,8 +15,8 @@ COPY --chown=appuser:appgroup requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appgroup . .
 USER appuser
-EXPOSE 8000
-CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8000", "--certificate", "/certs/nginx.crt", "--key", "/certs/nginx.key"]
+EXPOSE 8001
+CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8001", "--certificate", "/certs/nginx.crt", "--key", "/certs/nginx.key"]
 
 
 FROM ${DOCKER_IMAGE_REGISTRY}/library/python:${PYTHON_VERSION} AS obfuscator
@@ -82,4 +82,4 @@ RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
     && rm -rf /app/wheels
 EXPOSE 8001
 
-CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "30"]
+CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "30"]
