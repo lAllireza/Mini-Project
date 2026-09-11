@@ -80,6 +80,6 @@ ENV PYTHONUSERBASE=/home/appuser/.local \
     PYTHONUNBUFFERED=1
 RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
     && rm -rf /app/wheels
-EXPOSE 8000
+EXPOSE 8001
 
 CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "30"]
