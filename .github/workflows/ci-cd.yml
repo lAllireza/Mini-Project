@@ -89,9 +89,9 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-  # ۳. تشخیص خودکار نسخه‌ی بعدی (Semantic Versioning) بر اساس پیام کامیت‌ها و ساخت تگ
+  # ۳. تشخیص خودکار نسخه‌ی بعدی بر اساس فرمول سفارشی (جمع مستقل هر بخش، بدون صفر کردن)
   #    فقط روی پوش مستقیم به main اجرا می‌شود (نه روی pull request).
-  #    قوانین: fix: -> patch | feat: -> minor | feat!: یا BREAKING CHANGE: -> major
+  #    قوانین: هر fix: -> +۱ patch | هر feat: -> +۱ minor | هر feat!:/BREAKING CHANGE -> +۱ major
   auto-tag:
     needs: [backend-checks, frontend-checks]
     if: github.event_name == 'push' && github.ref == 'refs/heads/test'
@@ -99,9 +99,8 @@ jobs:
     permissions:
       contents: write
     outputs:
-      new_tag: ${{ steps.tag_version.outputs.new_tag }}
-      new_version: ${{ steps.tag_version.outputs.new_version }}
-      changelog: ${{ steps.tag_version.outputs.changelog }}
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      skip: ${{ steps.bump.outputs.skip }}
 
     steps:
       - name: Checkout code
@@ -110,17 +109,22 @@ jobs:
           # تاریخچه‌ی کامل لازم است تا کامیت‌های بعد از آخرین تگ قابل بررسی باشند
           fetch-depth: 0
 
-      - name: Bump version and push new tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          default_bump: patch
+      - name: Compute next version
+        id: bump
+        run: python3 .github/scripts/bump_version.py
+
+      - name: Create and push tag
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.bump.outputs.new_tag }}
+          git push origin ${{ steps.bump.outputs.new_tag }}
 
   # ۴. ساخت و پوش کردن کانتینرهای داکر
   docker-build-push:
     needs: auto-tag
-    if: needs.auto-tag.outputs.new_tag != ''
+    if: needs.auto-tag.outputs.skip != 'true'
     runs-on: ubuntu-latest
 
     # دسترسی لازم برای نوشتن ایمیج‌ها در بخش Packages گیت‌هاب
@@ -161,7 +165,6 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
-            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Backend Image
         uses: docker/build-push-action@v6
@@ -185,7 +188,6 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
-            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v6
@@ -201,7 +203,7 @@ jobs:
   # ۵. ساخت خودکار GitHub Release روی تگ‌ها
   create-release:
     needs: auto-tag
-    if: needs.auto-tag.outputs.new_tag != ''
+    if: needs.auto-tag.outputs.skip != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write # دسترسی لازم برای ساخت Release در گیت‌هاب
@@ -215,5 +217,4 @@ jobs:
         with:
           tag_name: ${{ needs.auto-tag.outputs.new_tag }}
           name: Release ${{ needs.auto-tag.outputs.new_tag }}
-          body: ${{ needs.auto-tag.outputs.changelog }}
           generate_release_notes: true # ساخت خودکار متن تغییرات بر اساس کامیت‌ها
