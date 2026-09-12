@@ -4,10 +4,6 @@ ARG PYTHON_VERSION=3.11-slim
 
 FROM ${DOCKER_IMAGE_REGISTRY}/library/python:${PYTHON_VERSION} AS dev-stage
 
-LABEL maintainer="your-team@example.com" \
-      tier="backend" \
-      lifecycle="development"
-
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 RUN mkdir /app && chown appuser:appgroup /app
 WORKDIR /app
@@ -15,8 +11,8 @@ COPY --chown=appuser:appgroup requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appgroup . .
 USER appuser
-EXPOSE 8001
-CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8001", "--certificate", "/certs/nginx.crt", "--key", "/certs/nginx.key"]
+EXPOSE 8000
+CMD ["python", "manage.py", "runsslserver", "0.0.0.0:8000", "--certificate", "/certs/nginx.crt", "--key", "/certs/nginx.key"]
 
 
 FROM ${DOCKER_IMAGE_REGISTRY}/library/python:${PYTHON_VERSION} AS obfuscator
@@ -71,6 +67,7 @@ COPY --chown=appuser:appgroup --from=obfuscator /build/dist/*.whl /tmp/wheels/
 # manage.py صرفاً یک اسکریپت CLI کوچک بدون منطق حساس است؛ جدا کپی می‌شود
 COPY --chown=appuser:appgroup manage.py .
 COPY --chown=appuser:appgroup --from=obfuscator /build/obfuscated/pyarmor_runtime_000000 /app/pyarmor_runtime_000000/
+COPY --chown=appuser:appgroup --from=dev-stage /app/NGINX/certs /etc/nginx/certs
 RUN chown -R appuser:appgroup /app
 
 USER appuser
@@ -82,4 +79,4 @@ RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
     && rm -rf /app/wheels
 EXPOSE 8001
 
-CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "30"]
+CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "30", "--certfile", "/app/certs/fullchain.pem", "--keyfile", "/app/certs/privkey.pem"]

@@ -6,6 +6,7 @@ COPY --chown=appuser:appgroup package*.json ./
 USER appuser
 RUN npm install
 COPY --chown=appuser:appgroup . .
+CMD ["npm", "run", "dev"]
 
 FROM dev-stage AS build-stage
 RUN npm run build

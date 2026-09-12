@@ -168,12 +168,7 @@ CORS_ALLOW_CREDENTIALS = True  # چون از session/cookie استفاده می�
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
-        'CSRF_TRUSTED_ORIGINS',
-        'http://localhost',
-        'https://94.183.150.153:8443',
-        'https://94.183.150.153:8080',
-        'https://94.183.150.153:8080'
-        ).split(',')
+        'CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',')
     if origin.strip()
 ]
 SESSION_COOKIE_SAMESITE = 'Lax'

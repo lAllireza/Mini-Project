@@ -3,7 +3,6 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main", "new" ]
-    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main", "new" ]
 
@@ -90,10 +89,38 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-  # ۳. ساخت و پوش کردن کانتینرهای داکر
-  docker-build-push:
+  # ۳. تشخیص خودکار نسخه‌ی بعدی (Semantic Versioning) بر اساس پیام کامیت‌ها و ساخت تگ
+  #    فقط روی پوش مستقیم به main اجرا می‌شود (نه روی pull request).
+  #    قوانین: fix: -> patch | feat: -> minor | feat!: یا BREAKING CHANGE: -> major
+  auto-tag:
     needs: [backend-checks, frontend-checks]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.tag_version.outputs.new_tag }}
+      new_version: ${{ steps.tag_version.outputs.new_version }}
+      changelog: ${{ steps.tag_version.outputs.changelog }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          # تاریخچه‌ی کامل لازم است تا کامیت‌های بعد از آخرین تگ قابل بررسی باشند
+          fetch-depth: 0
+
+      - name: Bump version and push new tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+
+  # ۴. ساخت و پوش کردن کانتینرهای داکر
+  docker-build-push:
+    needs: auto-tag
+    if: needs.auto-tag.outputs.new_tag != ''
     runs-on: ubuntu-latest
 
     # دسترسی لازم برای نوشتن ایمیج‌ها در بخش Packages گیت‌هاب
@@ -133,16 +160,15 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/backend
           tags: |
             type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
+            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Backend Image
         uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
           context: ./BackEND
-          file: ./BackEND/Dockerfile
+          file: ./BackEND/Dockerfile.backend
           target: prod-stage
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
@@ -158,25 +184,24 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/frontend
           tags: |
             type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
+            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v6
         with:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
           context: ./FrontEND
-          file: ./FrontEND/Dockerfile
+          file: ./FrontEND/Dockerfile-frontend
           target: prod-stage
           push: true
           tags: ${{ steps.frontend_meta.outputs.tags }}
           labels: ${{ steps.frontend_meta.outputs.labels }}
 
-  # ۴. ساخت خودکار GitHub Release روی تگ‌ها
+  # ۵. ساخت خودکار GitHub Release روی تگ‌ها
   create-release:
-    needs: [backend-checks, frontend-checks]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: auto-tag
+    if: needs.auto-tag.outputs.new_tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write # دسترسی لازم برای ساخت Release در گیت‌هاب
@@ -188,6 +213,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ needs.auto-tag.outputs.new_tag }}
+          name: Release ${{ needs.auto-tag.outputs.new_tag }}
+          body: ${{ needs.auto-tag.outputs.changelog }}
           generate_release_notes: true # ساخت خودکار متن تغییرات بر اساس کامیت‌ها

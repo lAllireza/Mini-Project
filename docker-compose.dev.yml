@@ -39,7 +39,6 @@ services:
       - ./NGINX/certs:/certs:ro
     networks:
       - frontend-backend-network
-    command: npm run dev
     develop:
       watch:
         - action: sync
