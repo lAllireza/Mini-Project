@@ -3,14 +3,12 @@
 محاسبه‌ی نسخه‌ی بعدی به روش سفارشی (غیراستاندارد نسبت به semver رایج):
 هر بخش (major/minor/patch) جدا و مستقل جمع زده می‌شود، بدون صفر کردن بخش‌های دیگر.
 
-قوانین شمارش commit ها از آخرین تگ معتبر (vX.Y.Z) تا الان:
-  - fix: ...                          -> +1 به patch
-  - feat: ...                         -> +1 به minor
-  - feat!: ...  یا بدنه‌ی BREAKING CHANGE: -> +1 به major
+قوانین شمارش/دسته‌بندی خط‌به‌خط (نه فقط خط اول/subject هر commit):
+  - fix: ...                             -> +1 به patch، زیر «Bug Fixes»
+  - feat: ...                            -> +1 به minor، زیر «Features»
+  - feat!: ... / fix!: ... / BREAKING CHANGE: ... -> +1 به major، زیر «Breaking Changes»
 
-اگر هیچ تگ معتبری وجود نداشته باشد، v1.0.0 به‌عنوان نسخه‌ی پایه ساخته می‌شود
-(بدون شمارش تاریخچه‌ی قبلی) — یعنی این اسکریپت فقط یک بار در ابتدای کار، نقطه‌ی
-شروع تمیز v1.0.0 می‌سازد.
+اگر هیچ تگ معتبری وجود نداشته باشد، v1.0.0 به‌عنوان نسخه‌ی پایه ساخته می‌شود.
 """
 from __future__ import annotations
 
@@ -18,6 +16,8 @@ import os
 import re
 import subprocess
 import sys
+
+REPO = os.environ.get("GITHUB_REPOSITORY", "")
 
 
 def run(cmd: str) -> str:
@@ -34,25 +34,29 @@ def get_last_tag() -> str | None:
     return tags[-1]
 
 
-def get_commits_since(last_tag: str | None) -> list[str]:
+def get_commits_since(last_tag: str | None) -> list[tuple[str, str]]:
+    """هر آیتم: (هش کوتاه commit, متن کامل subject+body)"""
     rng = f"{last_tag}..HEAD" if last_tag else "HEAD"
-    log = run(f'git log {rng} --no-merges --pretty=format:"@@@COMMIT@@@%n%s%n%b"')
+    log = run(f'git log {rng} --no-merges --pretty=format:"@@@COMMIT@@@%h%n%s%n%b"')
     if not log:
         return []
-    parts = log.split("@@@COMMIT@@@\n")
-    return [p for p in parts if p.strip()]
+    commits = []
+    for part in log.split("@@@COMMIT@@@"):
+        part = part.strip("\n")
+        if not part.strip():
+            continue
+        lines = part.split("\n", 1)
+        commit_hash = lines[0].strip()
+        text = lines[1] if len(lines) > 1 else ""
+        commits.append((commit_hash, text))
+    return commits
 
 
-def count_bumps(commits: list[str]) -> tuple[int, int, int]:
-    """
-    برخلاف نسخه‌ی قبلی (که فقط خط اول/subject هر commit را می‌دید)،
-    این نسخه هر خط را جدا بررسی می‌کند — یعنی چند pattern در یک commit
-    (با چند -m یا چند پاراگراف) هم جدا جدا شمارش می‌شوند.
-    """
+def count_bumps(commits: list[tuple[str, str]]) -> tuple[int, int, int]:
     major = minor = patch = 0
-    for commit_text in commits:
-        major += commit_text.count("BREAKING CHANGE:")
-        for line in commit_text.splitlines():
+    for _, text in commits:
+        major += text.count("BREAKING CHANGE:")
+        for line in text.splitlines():
             line = line.strip()
             if re.match(r"^\w+(\(.+\))?!:", line):
                 major += 1
@@ -69,22 +73,57 @@ def write_output(key: str, value: str) -> None:
 
 
 def write_multiline_output(key: str, value: str) -> None:
-    """
-    GitHub Actions برای مقادیر چندخطی (مثل changelog) نیاز به فرمت heredoc دارد،
-    نه فرمت ساده‌ی key=value.
-    """
     delimiter = "GHACTIONS_EOF"
     with open(os.environ["GITHUB_OUTPUT"], "a") as f:
         f.write(f"{key}<<{delimiter}\n{value}\n{delimiter}\n")
 
 
-def build_changelog(commits: list[str]) -> str:
-    lines = []
-    for commit_text in commits:
-        header = commit_text.splitlines()[0] if commit_text.strip() else ""
-        if header:
-            lines.append(f"- {header}")
-    return "\n".join(lines) if lines else "- بدون تغییر قابل ذکر"
+def build_changelog(commits: list[tuple[str, str]]) -> str:
+    """
+    برخلاف نسخه‌ی قبلی که فقط خط اول هر commit را می‌دید، این نسخه هر خط را
+    جدا بررسی می‌کند — یعنی چند pattern در یک commit (چند -m یا چند پاراگراف)
+    هم به‌صورت آیتم‌های جدا زیر دسته‌ی خودشان لیست می‌شوند، دقیقاً مثل خروجی
+    خودکار گیت‌هاب ولی بدون محدودیت «فقط خط اول».
+    """
+    breaking, features, fixes = [], [], []
+
+    for commit_hash, text in commits:
+        link = f"[{commit_hash}](https://github.com/{REPO}/commit/{commit_hash})" if REPO else commit_hash
+
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+
+            m = re.match(r"^BREAKING CHANGE:\s*(.*)", line)
+            if m:
+                breaking.append(f"- {m.group(1).strip()} ({link})")
+                continue
+
+            m = re.match(r"^\w+(\(.+\))?!:\s*(.*)", line)
+            if m:
+                breaking.append(f"- {m.group(2).strip()} ({link})")
+                continue
+
+            m = re.match(r"^feat(\(.+\))?:\s*(.*)", line)
+            if m:
+                features.append(f"- {m.group(2).strip()} ({link})")
+                continue
+
+            m = re.match(r"^fix(\(.+\))?:\s*(.*)", line)
+            if m:
+                fixes.append(f"- {m.group(2).strip()} ({link})")
+                continue
+
+    sections = []
+    if breaking:
+        sections.append("### 💥 Breaking Changes\n" + "\n".join(breaking))
+    if features:
+        sections.append("### ✨ Features\n" + "\n".join(features))
+    if fixes:
+        sections.append("### 🐛 Bug Fixes\n" + "\n".join(fixes))
+
+    return "\n\n".join(sections) if sections else "بدون تغییر قابل ذکر"
 
 
 def main() -> None:
