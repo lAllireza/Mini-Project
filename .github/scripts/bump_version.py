@@ -58,8 +58,8 @@ def count_bumps(commits: list[tuple[str, str]]) -> tuple[int, int, int]:
         major += text.count("BREAKING CHANGE:")
         for line in text.splitlines():
             line = line.strip()
-            if re.match(r"^\w+(\(.+\))?!:", line):
-                major += 1
+            if re.match(r"^\w+(\(.+\))?#:", line):
+                major += 0.1
             elif re.match(r"^feat(\(.+\))?:", line):
                 minor += 1
             elif re.match(r"^fix(\(.+\))?:", line):
