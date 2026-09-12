@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "new" ]
+    branches: [ "main", "new", "test" ]
   pull_request:
-    branches: [ "main", "new" ]
+    branches: [ "main", "new", "test" ]
 
 jobs:
   # ۱. بررسی‌های بک‌اند (در پوشه BackEND)
@@ -94,7 +94,7 @@ jobs:
   #    قوانین: fix: -> patch | feat: -> minor | feat!: یا BREAKING CHANGE: -> major
   auto-tag:
     needs: [backend-checks, frontend-checks]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/test'
     runs-on: ubuntu-latest
     permissions:
       contents: write
