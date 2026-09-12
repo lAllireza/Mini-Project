@@ -67,7 +67,7 @@ COPY --chown=appuser:appgroup --from=obfuscator /build/dist/*.whl /tmp/wheels/
 # manage.py صرفاً یک اسکریپت CLI کوچک بدون منطق حساس است؛ جدا کپی می‌شود
 COPY --chown=appuser:appgroup manage.py .
 COPY --chown=appuser:appgroup --from=obfuscator /build/obfuscated/pyarmor_runtime_000000 /app/pyarmor_runtime_000000/
-COPY --chown=appuser:appgroup --from=dev-stage /certs /certs
+COPY --chown=appuser:appgroup --from=dev-stage /certs/ /certs/
 RUN chown -R appuser:appgroup /app
 
 USER appuser

@@ -168,7 +168,7 @@ jobs:
         with:
           # مسیر اجرای داکر را به پوشه بک‌اند تغییر دادیم
           context: ./BackEND
-          file: ./BackEND/Dockerfile.backend
+          file: ./BackEND/Dockerfile
           target: prod-stage
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
@@ -192,7 +192,7 @@ jobs:
         with:
           # مسیر اجرای داکر را به پوشه فرانت‌اند تغییر دادیم
           context: ./FrontEND
-          file: ./FrontEND/Dockerfile-frontend
+          file: ./FrontEND/Dockerfile
           target: prod-stage
           push: true
           tags: ${{ steps.frontend_meta.outputs.tags }}
