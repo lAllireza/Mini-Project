@@ -100,7 +100,7 @@ def build_changelog(commits: list[tuple[str, str]]) -> str:
                 breaking.append(f"- {m.group(1).strip()} ({link})")
                 continue
 
-            m = re.match(r"^\w+(\(.+\))?!:\s*(.*)", line)
+            m = re.match(r"^\w+(\(.+\))?#:\s*(.*)", line)
             if m:
                 breaking.append(f"- {m.group(2).strip()} ({link})")
                 continue
