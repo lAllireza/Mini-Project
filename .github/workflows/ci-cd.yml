@@ -94,7 +94,9 @@ jobs:
   #    قوانین: هر fix: -> +۱ patch | هر feat: -> +۱ minor | هر feat!:/BREAKING CHANGE -> +۱ major
   auto-tag:
     needs: [backend-checks, frontend-checks]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/test'
+    if: |
+      github.event_name == 'push' &&
+      contains(fromJSON('["refs/heads/main", "refs/heads/new", "refs/heads/test"]'), github.ref)
     runs-on: ubuntu-latest
     permissions:
       contents: write
