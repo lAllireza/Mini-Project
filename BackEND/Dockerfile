@@ -67,7 +67,7 @@ COPY --chown=appuser:appgroup --from=obfuscator /build/dist/*.whl /tmp/wheels/
 # manage.py صرفاً یک اسکریپت CLI کوچک بدون منطق حساس است؛ جدا کپی می‌شود
 COPY --chown=appuser:appgroup manage.py .
 COPY --chown=appuser:appgroup --from=obfuscator /build/obfuscated/pyarmor_runtime_000000 /app/pyarmor_runtime_000000/
-COPY --chown=appuser:appgroup --from=dev-stage /app/NGINX/certs /etc/nginx/certs
+COPY --chown=appuser:appgroup --from=dev-stage /certs /certs
 RUN chown -R appuser:appgroup /app
 
 USER appuser
@@ -79,4 +79,4 @@ RUN pip install --user --no-index --find-links=/tmp/wheels mycore-backend \
     && rm -rf /app/wheels
 EXPOSE 8001
 
-CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "30", "--certfile", "/app/certs/fullchain.pem", "--keyfile", "/app/certs/privkey.pem"]
+CMD ["gunicorn", "MyCore.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "30", "--certfile", "certs/nginx.crt", "--keyfile", "certs/nginx.key"]
