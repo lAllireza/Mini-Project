@@ -68,12 +68,34 @@ def write_output(key: str, value: str) -> None:
         f.write(f"{key}={value}\n")
 
 
+def write_multiline_output(key: str, value: str) -> None:
+    """
+    GitHub Actions برای مقادیر چندخطی (مثل changelog) نیاز به فرمت heredoc دارد،
+    نه فرمت ساده‌ی key=value.
+    """
+    delimiter = "GHACTIONS_EOF"
+    with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+        f.write(f"{key}<<{delimiter}\n{value}\n{delimiter}\n")
+
+
+def build_changelog(commits: list[str]) -> str:
+    lines = []
+    for commit_text in commits:
+        header = commit_text.splitlines()[0] if commit_text.strip() else ""
+        if header:
+            lines.append(f"- {header}")
+    return "\n".join(lines) if lines else "- بدون تغییر قابل ذکر"
+
+
 def main() -> None:
     last_tag = get_last_tag()
 
     if last_tag is None:
         print("هیچ تگ معتبری (vX.Y.Z) پیدا نشد؛ نسخه‌ی پایه v1.0.0 ساخته می‌شود.", file=sys.stderr)
+        commits = get_commits_since(None)
         write_output("new_tag", "v1.0.0")
+        write_output("new_version", "1.0.0")
+        write_multiline_output("changelog", build_changelog(commits))
         write_output("skip", "false")
         return
 
@@ -92,8 +114,10 @@ def main() -> None:
         write_output("skip", "true")
         return
 
-    new_tag = f"v{major + major_count}.{minor + minor_count}.{patch + patch_count}"
-    write_output("new_tag", new_tag)
+    new_major, new_minor, new_patch = major + major_count, minor + minor_count, patch + patch_count
+    write_output("new_tag", f"v{new_major}.{new_minor}.{new_patch}")
+    write_output("new_version", f"{new_major}.{new_minor}.{new_patch}")
+    write_multiline_output("changelog", build_changelog(commits))
     write_output("skip", "false")
 
 

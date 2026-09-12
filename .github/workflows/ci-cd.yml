@@ -102,6 +102,8 @@ jobs:
       contents: write
     outputs:
       new_tag: ${{ steps.bump.outputs.new_tag }}
+      new_version: ${{ steps.bump.outputs.new_version }}
+      changelog: ${{ steps.bump.outputs.changelog }}
       skip: ${{ steps.bump.outputs.skip }}
 
     steps:
@@ -167,6 +169,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
+            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Backend Image
         uses: docker/build-push-action@v6
@@ -190,6 +193,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.auto-tag.outputs.new_tag }}
+            type=raw,value=${{ needs.auto-tag.outputs.new_version }}
 
       - name: Build and push Frontend Image
         uses: docker/build-push-action@v6
@@ -219,4 +223,5 @@ jobs:
         with:
           tag_name: ${{ needs.auto-tag.outputs.new_tag }}
           name: Release ${{ needs.auto-tag.outputs.new_tag }}
+          body: ${{ needs.auto-tag.outputs.changelog }}
           generate_release_notes: true # ساخت خودکار متن تغییرات بر اساس کامیت‌ها
